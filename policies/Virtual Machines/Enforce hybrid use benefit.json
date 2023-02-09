@@ -1,0 +1,90 @@
+{
+    "mode": "Indexed",
+    "parameters": {
+        "effect": {
+            "type": "String",
+            "metadata": {
+                "displayName": "Effect",
+                "description": "Enable or disable the execution of the policy"
+            },
+            "allowedValues": [
+                "Audit",
+                "Deny",
+                "Modify"
+            ],
+            "defaultValue": "Audit"
+        }
+    },
+    "policyRule": {
+        "if": {
+            "anyOf": [
+                {
+                    "allOf": [
+                        {
+                            "field": "type",
+                            "equals": "Microsoft.Compute/virtualMachines"
+                        },
+                        {
+                            "field": "Microsoft.Compute/imagePublisher",
+                            "in": [
+                                "MicrosoftWindowsServer",
+                                "MicrosoftWindowsClient"
+                            ]
+                        },
+                        {
+                            "allOf": [
+                                {
+                                    "field": "Microsoft.Compute/licenseType",
+                                    "notEquals": "Windows_Server"
+                                },
+                                {
+                                    "field": "Microsoft.Compute/licenseType",
+                                    "notEquals": "Windows_Client"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "allOf": [
+                        {
+                            "field": "type",
+                            "equals": "Microsoft.Compute/virtualMachines"
+                        },
+                        {
+                            "field": "Microsoft.Compute/virtualMachines/storageProfile.osDisk.osType",
+                            "equals": "Windows"
+                        },
+                        {
+                            "allOf": [
+                                {
+                                    "field": "Microsoft.Compute/licenseType",
+                                    "notEquals": "Windows_Server"
+                                },
+                                {
+                                    "field": "Microsoft.Compute/licenseType",
+                                    "notEquals": "Windows_Client"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        "then": {
+            "effect": "[parameters('effect')]",
+            "details": {
+                "roleDefinitionIds": [
+                    "/providers/Microsoft.Authorization/roleDefinitions/b24988ac-6180-42a0-ab88-20f7382dd24c"
+                ],
+                "operations": [
+                    {
+                        "operation": "addOrReplace",
+                        "field": "Microsoft.Compute/virtualMachines/licenseType",
+                        "value": "Windows_Server"
+                    }
+                ]
+            }
+        }
+    }
+}

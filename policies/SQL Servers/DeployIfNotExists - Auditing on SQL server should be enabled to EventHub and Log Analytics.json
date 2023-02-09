@@ -1,0 +1,185 @@
+{
+    "mode": "Indexed",
+    "parameters": {
+        "diagnosticSettingsName": {
+            "type": "String",
+            "metadata": {
+                "displayName": "Diagnostic Settings Name",
+                "description": "Provide a name for the diagnostic settings"
+            }
+        },
+        "eventhubAuthorizationRuleName": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of Namespace Authorization Rule.",
+                "displayName": "Event Hubs Authorization Rule Name",
+                "strongType": "Microsoft.EventHub/Namespaces/AuthorizationRules"
+            }
+        },
+        "eventHubName": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of Event Hub.",
+                "displayName": "Event Hub Name",
+                "strongType": "Microsoft.EventHub/namespaces/eventhubs"
+            }
+        },
+        "isMSDevopsAuditEnabled": {
+            "type": "boolean",
+            "defaultValue": false,
+            "metadata": {
+                "description": "Enable Auditing of Microsoft support operations (DevOps)"
+            }
+        },
+        "isStorageBehindVnet": {
+            "type": "boolean",
+            "defaultValue": false,
+            "metadata": {
+                "description": "Enable Auditing to storage behind Virtual Network or firewall rules. The user deploying the template must have an administrator or owner permissions."
+            }
+        },
+        "omsWorkspaceName": {
+            "type": "String",
+            "metadata": {
+                "displayName": "Log Analystics Workspace Name",
+                "description": "Log Analystics Workspace Name",
+                "strongType": "omsWorkspace"
+            }
+        }
+    },
+    "policyRule": {
+        "if": {
+            "allOf": [
+                {
+                    "field": "type",
+                    "equals": "Microsoft.Sql/servers"
+                },
+                {
+                    "field": "kind",
+                    "notContains": "analytics"
+                }
+            ]
+        },
+        "then": {
+            "effect": "deployIfNotExists",
+            "details": {
+                "type": "Microsoft.Sql/servers/auditingSettings",
+                "name": "default",
+                "existenceCondition": {
+                    "field": "Microsoft.Sql/auditingSettings.state",
+                    "equals": "enabled"
+                },
+                "roleDefinitionIds": [
+                    "/providers/Microsoft.Authorization/roleDefinitions/b24988ac-6180-42a0-ab88-20f7382dd24c",
+                    "/providers/microsoft.authorization/roleDefinitions/f526a384-b230-433a-b45c-95f59c4a2dec"
+                ],
+                "deployment": {
+                    "properties": {
+                        "mode": "incremental",
+                        "template": {
+                            "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+                            "contentVersion": "1.0.0.0",
+                            "parameters": {
+                                "resourceName": {
+                                    "type": "string"
+                                },
+                                "diagnosticSettingsName": {
+                                    "type": "string"
+                                },
+                                "eventhubAuthorizationRuleName": {
+                                    "type": "string"
+                                },
+                                "eventHubName": {
+                                    "type": "string"
+                                },
+                                "isMSDevopsAuditEnabled": {
+                                    "type": "bool"
+                                },
+                                "isStorageBehindVnet": {
+                                    "type": "bool"
+                                },
+                                "omsWorkspaceName": {
+                                    "type": "string"
+                                }
+                            },
+                            "variables": {
+                                "eventHubName": "[split(parameters('eventHubName'), '/')[10]]"
+                            },
+                            "resources": [
+                                {
+                                    "name": "[concat(parameters('resourceName'), '/master/microsoft.insights/',parameters('diagnosticSettingsName'))]",
+                                    "type": "Microsoft.Sql/servers/databases/providers/diagnosticSettings",
+                                    "apiVersion": "2021-05-01-preview",
+                                    "properties": {
+                                        "name": "[parameters('diagnosticSettingsName')]",
+                                        "eventHubAuthorizationRuleId": "[parameters('eventhubAuthorizationRuleName')]",
+                                        "eventHubName": "[variables('eventHubName')]",
+                                        "workspaceId": "[parameters('omsWorkspaceName')]",
+                                        "logs": [
+                                            {
+                                                "category": "SQLSecurityAuditEvents",
+                                                "enabled": true,
+                                                "retentionPolicy": {
+                                                    "days": 0,
+                                                    "enabled": false
+                                                }
+                                            },
+                                            {
+                                                "condition": "[parameters('isMSDevopsAuditEnabled')]",
+                                                "category": "DevOpsOperationsAudit",
+                                                "enabled": true,
+                                                "retentionPolicy": {
+                                                    "days": 0,
+                                                    "enabled": false
+                                                }
+                                            }
+                                        ]
+                                    }
+                                },
+                                {
+                                    "type": "Microsoft.Sql/servers/auditingSettings",
+                                    "apiVersion": "2022-05-01-preview",
+                                    "name": "[concat(parameters('resourceName'), '/default')]",
+                                    "properties": {
+                                        "State": "Enabled",
+                                        "isAzureMonitorTargetEnabled": true,
+                                        "retentionDays": 0,
+                                        "auditActionsAndGroups": [
+                                            "SUCCESSFUL_DATABASE_AUTHENTICATION_GROUP",
+                                            "FAILED_DATABASE_AUTHENTICATION_GROUP",
+                                            "BATCH_COMPLETED_GROUP"
+                                        ]
+                                    }
+                                }
+                            ],
+                            "outputs": {}
+                        },
+                        "parameters": {
+                            "resourceName": {
+                                "value": "[field('name')]"
+                            },
+                            "diagnosticSettingsName": {
+                                "value": "[parameters('diagnosticSettingsName')]"
+                            },
+                            "eventhubAuthorizationRuleName": {
+                                "value": "[parameters('eventhubAuthorizationRuleName')]"
+                            },
+                            "eventHubName": {
+                                "value": "[parameters('eventHubName')]"
+                            },
+                            "isMSDevopsAuditEnabled": {
+                                "value": "[parameters('isMSDevopsAuditEnabled')]"
+                            },
+                            "isStorageBehindVnet": {
+                                "value": "[parameters('isStorageBehindVnet')]"
+                            },
+                            "omsWorkspaceName": {
+                                "value": "[parameters('omsWorkspaceName')]"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

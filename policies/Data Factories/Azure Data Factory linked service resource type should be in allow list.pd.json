@@ -1,0 +1,46 @@
+{
+  "mode": "Indexed",
+  "parameters": {
+    "effect": {
+      "type": "String",
+      "metadata": {
+        "displayName": "Effect",
+        "description": "Enable or disable the execution of the policy"
+      },
+      "allowedValues": [
+        "Audit",
+        "Deny",
+        "Disabled"
+      ],
+      "defaultValue": "Audit"
+    },
+    "allowedLinkedServiceUris": {
+      "type": "Array",
+      "metadata": {
+        "displayName": "Allowed linked service Uris",
+        "description": "The list of allowed linked service Uri."
+      }
+    }
+  },
+  "policyRule": {
+    "if": {
+      "allOf": [
+        {
+          "field": "type",
+          "equals": "Microsoft.DataFactory/factories/linkedservices"
+        },
+        {
+          "field": "Microsoft.DataFactory/factories/linkedservices/type",
+          "equals": "RestService"
+        },
+        {
+          "field": "Microsoft.DataFactory/factories/linkedservices/SapEcc.typeProperties.url",
+          "notIn": "[parameters('allowedLinkedServiceUris')]"
+        }
+      ]
+    },
+    "then": {
+      "effect": "[parameters('effect')]"
+    }
+  }
+}

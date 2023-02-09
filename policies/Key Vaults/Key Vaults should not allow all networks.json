@@ -1,0 +1,35 @@
+{
+    "mode": "Indexed",
+    "parameters": {
+        "effect": {
+            "type": "String",
+            "metadata": {
+                "displayName": "Effect",
+                "description": "Enable or disable the execution of the policy"
+            },
+            "allowedValues": [
+                "Audit",
+                "Deny",
+                "Disabled"
+            ],
+            "defaultValue": "Deny"
+        }
+    },
+    "policyRule": {
+        "if": {
+            "allOf": [
+                {
+                    "field": "type",
+                    "equals": "Microsoft.KeyVault/vaults"
+                },
+                {
+                    "field": "Microsoft.KeyVault/vaults/networkAcls.defaultAction",
+                    "equals": "Allow"
+                }
+            ]
+        },
+        "then": {
+            "effect": "[parameters('effect')]"
+        }
+    }
+}

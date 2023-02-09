@@ -1,0 +1,96 @@
+{
+    "mode": "All",
+    "parameters": {
+        "lockName": {
+            "type": "String",
+            "metadata": {
+                "displayName": "Resource Lock Name",
+                "description": "Provide a name for the lock."
+            }
+        },
+        "lockType": {
+            "type": "String",
+            "allowedValues": [
+                "CanNotDelete",
+                "ReadOnly"
+            ],
+            "metadata": {
+                "displayName": "Lock Type",
+                "description": "Select the lock type."
+            }
+        },
+        "notes": {
+            "type": "String",
+            "metadata": {
+                "displayName": "Lock Notes",
+                "description": "Provide any notes you would like to be added to the lock."
+            }
+        }
+    },
+    "policyRule": {
+        "if": {
+            "allOf": [
+                {
+                    "field": "type",
+                    "equals": "Microsoft.Resources/subscriptions/resourceGroups"
+                },
+                {
+                    "field": "name",
+                    "notLike": "azurebackuprg*"
+                }
+            ]
+        },
+        "then": {
+            "effect": "deployIfNotExists",
+            "details": {
+                "type": "Microsoft.Authorization/locks",
+                "roleDefinitionIds": [
+                    "/providers/Microsoft.Authorization/roleDefinitions/8e3af657-a8ff-443c-a75c-2fe8c4bcb635",
+                    "/providers/Microsoft.Authorization/roleDefinitions/18d7d88d-d35e-4fb5-a5c3-7773c20a72d9"
+                ],
+                "deployment": {
+                    "properties": {
+                        "mode": "incremental",
+                        "template": {
+                            "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                            "contentVersion": "1.0.0.0",
+                            "parameters": {
+                                "lockName": {
+                                    "type": "String"
+                                },
+                                "lockType": {
+                                    "type": "String"
+                                },
+                                "notes": {
+                                    "type": "String"
+                                }
+                            },
+                            "resources": [
+                                {
+                                    "type": "Microsoft.Authorization/locks",
+                                    "apiVersion": "2017-04-01",
+                                    "name": "[parameters('lockName')]",
+                                    "properties": {
+                                        "level": "[parameters('lockType')]",
+                                        "notes": "[parameters('notes')]"
+                                    }
+                                }
+                            ]
+                        },
+                        "parameters": {
+                            "lockName": {
+                                "value": "[parameters('lockName')]"
+                            },
+                            "lockType": {
+                                "value": "[parameters('lockType')]"
+                            },
+                            "notes": {
+                                "value": "[parameters('notes')]"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
