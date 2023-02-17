@@ -1,0 +1,36 @@
+{
+    "mode": "Indexed",
+    "parameters": {},
+    "policyRule": {
+        "if": {
+            "allOf": [
+                {
+                    "field": "type",
+                    "equals": "Microsoft.Network/networkSecurityGroups"
+                },
+                {
+                    "count": {
+                        "field": "Microsoft.Network/networkSecurityGroups/securityRules[*]",
+                        "where": {
+                            "field": "Microsoft.Network/networkSecurityGroups/securityRules[*].name",
+                            "in": [
+                                "RDP",
+                                "SSH"
+                            ]
+                        }
+                    },
+                    "greater": 0
+                },
+                {
+                    "count": {
+                        "field": "Microsoft.Network/networkSecurityGroups/securityRules[*]"
+                    },
+                    "notEquals": 0
+                }
+            ]
+        },
+        "then": {
+            "effect": "deny"
+        }
+    }
+}
